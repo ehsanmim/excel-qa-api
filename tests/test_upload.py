@@ -74,3 +74,9 @@ def test_one_bad_file_stores_nothing(client, store):
 
 def test_upload_without_files_is_rejected(client):
     assert client.post("/upload").status_code == 422
+
+
+def test_docs_show_a_file_picker_for_uploads(client):
+    schema = client.get("/openapi.json").json()
+    files = schema["components"]["schemas"]["Body_upload_upload_post"]["properties"]["files"]
+    assert files["items"]["format"] == "binary"

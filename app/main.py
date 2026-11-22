@@ -16,6 +16,18 @@ from app.planner import Planner, PlannerError, describe_columns, make_planner
 from app.store import WorkbookStore
 
 app = FastAPI(title="Excel Q&A API", version="1.0.0")
+default_openapi = app.openapi
+
+
+def openapi_with_file_picker() -> dict:
+    """Mark the uploaded files as binary so Swagger UI at /docs shows a file picker."""
+    schema = default_openapi()
+    files = schema["components"]["schemas"]["Body_upload_upload_post"]["properties"]["files"]
+    files["items"]["format"] = "binary"
+    return schema
+
+
+app.openapi = openapi_with_file_picker
 
 
 @app.exception_handler(PlannerError)
