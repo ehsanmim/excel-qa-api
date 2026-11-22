@@ -2,8 +2,8 @@
 
 Only the table's schema is sent to the model, never the rows.
 Two providers are supported, chosen with the LLM_PROVIDER environment variable:
-- "anthropic" (default): Claude through the Anthropic SDK.
-- "openai": any OpenAI-compatible API (OpenAI, OpenRouter, Gemini, Ollama, ...).
+- "openai" (default): any OpenAI-compatible API (OpenAI, OpenRouter, Gemini, Ollama, ...).
+- "anthropic": Claude through the Anthropic SDK.
 """
 
 import json
@@ -53,12 +53,12 @@ class Planner(Protocol):
 
 
 def make_planner() -> Planner:
-    provider = os.environ.get("LLM_PROVIDER", "anthropic").strip().lower()
+    provider = os.environ.get("LLM_PROVIDER", "openai").strip().lower()
     if provider == "anthropic":
         return ClaudePlanner()
     if provider == "openai":
         return OpenAICompatiblePlanner()
-    raise PlannerError(500, f"unknown LLM_PROVIDER '{provider}'; use 'anthropic' or 'openai'")
+    raise PlannerError(500, f"unknown LLM_PROVIDER '{provider}'; use 'openai' or 'anthropic'")
 
 
 def describe_columns(dataframe: pd.DataFrame) -> list[dict[str, Any]]:

@@ -3,14 +3,14 @@ import pytest
 from app.planner import ClaudePlanner, OpenAICompatiblePlanner, PlannerError, make_planner
 
 
-def test_default_provider_is_anthropic(monkeypatch):
+def test_default_provider_is_openai_compatible(monkeypatch):
     monkeypatch.delenv("LLM_PROVIDER", raising=False)
-    assert isinstance(make_planner(), ClaudePlanner)
-
-
-def test_openai_compatible_provider(monkeypatch):
-    monkeypatch.setenv("LLM_PROVIDER", "openai")
     assert isinstance(make_planner(), OpenAICompatiblePlanner)
+
+
+def test_anthropic_provider(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "anthropic")
+    assert isinstance(make_planner(), ClaudePlanner)
 
 
 def test_unknown_provider(monkeypatch):

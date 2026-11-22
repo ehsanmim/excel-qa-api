@@ -10,9 +10,9 @@ from fastapi.testclient import TestClient
 from app.main import app
 
 def llm_configured() -> bool:
-    if os.environ.get("LLM_PROVIDER", "anthropic").lower() == "openai":
-        return bool(os.environ.get("OPENAI_API_KEY") and os.environ.get("OPENAI_MODEL"))
-    return bool(os.environ.get("ANTHROPIC_API_KEY"))
+    if os.environ.get("LLM_PROVIDER", "openai").lower() == "anthropic":
+        return bool(os.environ.get("ANTHROPIC_API_KEY"))
+    return bool(os.environ.get("OPENAI_API_KEY") and os.environ.get("OPENAI_MODEL"))
 
 
 pytestmark = pytest.mark.skipif(not llm_configured(), reason="no LLM API key configured")
