@@ -64,7 +64,7 @@ def apply_filter(plan: QueryPlan, dataframe: pd.DataFrame) -> pd.DataFrame:
     elif types.is_datetime64_any_dtype(series):
         mask = series == to_date(value, column)
     else:
-        mask = series.astype("string").str.strip() == str(value).strip()
+        mask = series.astype("string").str.strip().str.casefold() == str(value).strip().casefold()
     return dataframe[mask.fillna(False).astype(bool)]
 
 

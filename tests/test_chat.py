@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from app.models import QueryPlan
-from tests.conftest import XLSX_TYPE
+from tests.conftest import XLSX_TYPE, xlsx_bytes
 
 SAMPLE = Path(__file__).parent.parent / "sample_data" / "sample.xlsx"
 
@@ -172,3 +172,18 @@ def test_planner_error_becomes_http_error(client, planner, workbook_id, monkeypa
 
     assert response.status_code == 503
     assert response.json() == {"detail": "could not reach the LLM service"}
+
+
+def test_text_filter_ignores_case_and_spaces(client, planner):
+    people = pd.DataFrame({"Salesperson": ["Anna Schmidt", "Ben Meyer", "Anna Schmidt "], "Units": [1, 2, 3]})
+    content = xlsx_bytes(("People", people))
+    response = client.post("/upload", files=[("files", ("people.xlsx", content, XLSX_TYPE))])
+    workbook_id = response.json()["workbooks"][0]["workbook_id"]
+
+    planner.next_plan = QueryPlan(operation="filter", filter_column="Salesperson", filter_value=" anna SCHMIDT")
+    body = ask(client, workbook_id).json()
+    assert body["count"] == 2
+    assert [row["Units"] for row in body["result"]] == [1, 3]
+
+    planner.next_plan = QueryPlan(operation="count", filter_column="Salesperson", filter_value="anna schmidt")
+    assert ask(client, workbook_id).json()["result"] == 2
