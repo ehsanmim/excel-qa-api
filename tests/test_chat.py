@@ -159,3 +159,16 @@ def test_sum_on_sample_workbook_matches_pandas(client, planner):
     body = ask(client, workbook["workbook_id"]).json()
 
     assert body["result"] == pytest.approx(expected.loc[expected[filter_column] == value, target].sum())
+
+
+def test_planner_error_becomes_http_error(client, planner, workbook_id, monkeypatch):
+    from app.planner import PlannerError
+
+    def fail(question, schema):
+        raise PlannerError(503, "could not reach the LLM service")
+
+    monkeypatch.setattr(planner, "plan", fail)
+    response = ask(client, workbook_id)
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "could not reach the LLM service"}

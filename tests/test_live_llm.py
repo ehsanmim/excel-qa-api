@@ -1,4 +1,4 @@
-"""Runs the example questions through the real LLM. Skipped without ANTHROPIC_API_KEY."""
+"""Runs the example questions through the real LLM. Skipped when no LLM key is configured."""
 
 import os
 from pathlib import Path
@@ -9,7 +9,13 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
-pytestmark = pytest.mark.skipif(not os.environ.get("ANTHROPIC_API_KEY"), reason="ANTHROPIC_API_KEY not set")
+def llm_configured() -> bool:
+    if os.environ.get("LLM_PROVIDER", "anthropic").lower() == "openai":
+        return bool(os.environ.get("OPENAI_API_KEY") and os.environ.get("OPENAI_MODEL"))
+    return bool(os.environ.get("ANTHROPIC_API_KEY"))
+
+
+pytestmark = pytest.mark.skipif(not llm_configured(), reason="no LLM API key configured")
 
 SAMPLE = Path(__file__).parent.parent / "sample_data" / "sample.xlsx"
 XLSX_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

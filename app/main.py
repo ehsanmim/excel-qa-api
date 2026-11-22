@@ -2,15 +2,21 @@
 
 from functools import lru_cache
 
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.responses import JSONResponse
 
 from app.excel import ExcelError, read_first_sheet
 from app.executor import SUPPORTED_MESSAGE, PlanError, execute
 from app.models import ChatRequest, ChatResponse, UploadedWorkbook, UploadResponse
-from app.planner import ClaudePlanner, Planner, PlannerError, describe_columns
+from app.planner import Planner, PlannerError, describe_columns, make_planner
 from app.store import WorkbookStore
 
 app = FastAPI(title="Excel Q&A API", version="1.0.0")
+
+
+@app.exception_handler(PlannerError)
+def planner_error(request: Request, exc: PlannerError) -> JSONResponse:
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
 
 
 @lru_cache
@@ -20,7 +26,7 @@ def get_store() -> WorkbookStore:
 
 @lru_cache
 def get_planner() -> Planner:
-    return ClaudePlanner()
+    return make_planner()
 
 
 @app.post("/upload", response_model=UploadResponse)
@@ -61,10 +67,7 @@ def chat(
     if workbook is None:
         raise HTTPException(status_code=404, detail=f"workbook '{request.workbook_id}' not found")
 
-    try:
-        plan = planner.plan(request.question, describe_columns(workbook.dataframe))
-    except PlannerError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    plan = planner.plan(request.question, describe_columns(workbook.dataframe))
 
     context = {
         "operation": plan.operation,
