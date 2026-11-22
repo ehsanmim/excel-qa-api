@@ -20,6 +20,7 @@ from app.models import QueryPlan
 
 DEFAULT_ANTHROPIC_MODEL = "claude-opus-5-5"
 MAX_LISTED_VALUES = 30
+LLM_TIMEOUT_SECONDS = 60
 
 SYSTEM_PROMPT = """You turn a question about one spreadsheet table into a query plan. You never compute answers yourself.
 
@@ -128,7 +129,7 @@ class ClaudePlanner:
     def _get_client(self) -> anthropic.Anthropic:
         require_env("ANTHROPIC_API_KEY")
         if self._client is None:
-            self._client = anthropic.Anthropic()
+            self._client = anthropic.Anthropic(timeout=LLM_TIMEOUT_SECONDS)
         return self._client
 
 
@@ -171,5 +172,7 @@ class OpenAICompatiblePlanner:
         require_env("OPENAI_API_KEY")
         if self._client is None:
             # An empty OPENAI_BASE_URL means "use OpenAI itself".
-            self._client = openai.OpenAI(base_url=os.environ.get("OPENAI_BASE_URL") or None)
+            self._client = openai.OpenAI(
+                base_url=os.environ.get("OPENAI_BASE_URL") or None, timeout=LLM_TIMEOUT_SECONDS
+            )
         return self._client

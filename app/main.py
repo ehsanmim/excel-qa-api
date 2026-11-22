@@ -2,8 +2,12 @@
 
 from functools import lru_cache
 
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse
+
+# Read settings from .env if it exists; variables already set in the shell win.
+load_dotenv()
 
 from app.excel import ExcelError, read_first_sheet
 from app.executor import SUPPORTED_MESSAGE, PlanError, execute
